@@ -1,133 +1,203 @@
-import exception.BankException;
-import exception.InsufficientFundsException;
-import exception.InvalidAmountException;
-
 import model.Account;
-import model.CurrentAccount;
-import model.FixedDepositAccount;
-import model.SavingsAccount;
-import model.WithdrawRule;
-
 import service.BankService;
-import util.AnnotationValidator;
+import service.TransactionProcessor;
+import exception.BankException;
 
-import static util.Validator.*;
+import java.util.Scanner;
+import java.io.IOException;
 
 public class MiniBank {
 
     public static void main(String[] args) {
 
-        System.out.println("===== ANNOTATION VALIDATION =====");
+        Scanner sc = new Scanner(System.in);
+        BankService bank = new BankService();
 
-        Account invalidAccount =
-                new SavingsAccount("Test User", -100, 0);
+        try {
+            bank.loadAccounts();
+        } catch (IOException | ClassNotFoundException e) {
+            System.out.println("Could not load accounts: " + e.getMessage());
+        }
 
-        String[] errors = AnnotationValidator.validate(invalidAccount);
+        boolean running = true;
 
-        if (errors.length == 0) {
-            System.out.println("No validation errors found.");
-        } else {
-            for (String error : errors) {
-                System.out.println(error);
+        while (running) {
+            System.out.println("\n===== MINI BANK MENU =====");
+            System.out.println("1. Open Account");
+            System.out.println("2. Deposit");
+            System.out.println("3. Withdraw");
+            System.out.println("4. Transfer");
+            System.out.println("5. Account Statement");
+            System.out.println("6. List Accounts");
+            System.out.println("7. Generate End-of-Day Report");
+            System.out.println("8. Batch Deposit Demo");
+            System.out.println("0. Save and Exit");
+            System.out.print("Choose option: ");
+
+            String choice = sc.nextLine().trim();
+
+            try {
+                switch (choice) {
+                    case "1": {
+                        System.out.print("Owner name: ");
+                        String name = sc.nextLine();
+
+                        System.out.print("Opening balance: ");
+                        long balance = Long.parseLong(sc.nextLine().trim());
+
+                        Account account = bank.openAccount(name, balance);
+                        System.out.println("Account created: "
+                                + account.getAccountNumber());
+                        break;
+                    }
+
+                    case "2": {
+                        System.out.print("Account number: ");
+                        String id = sc.nextLine().trim();
+
+                        System.out.print("Deposit amount: ");
+                        long amount = Long.parseLong(sc.nextLine().trim());
+
+                        bank.deposit(id, amount);
+                        System.out.println("Deposit successful.");
+                        break;
+                    }
+
+                    case "3": {
+                        System.out.print("Account number: ");
+                        String id = sc.nextLine().trim();
+
+                        System.out.print("Withdrawal amount: ");
+                        long amount = Long.parseLong(sc.nextLine().trim());
+
+                        bank.withdraw(id, amount);
+                        System.out.println("Withdrawal successful.");
+                        break;
+                    }
+
+                    case "4": {
+                        System.out.print("From account: ");
+                        String from = sc.nextLine().trim();
+
+                        System.out.print("To account: ");
+                        String to = sc.nextLine().trim();
+
+                        System.out.print("Transfer amount: ");
+                        long amount = Long.parseLong(sc.nextLine().trim());
+
+                        bank.transfer(from, to, amount);
+                        System.out.println("Transfer successful.");
+                        break;
+                    }
+
+                    case "5": {
+                        System.out.print("Account number: ");
+                        String id = sc.nextLine().trim();
+                        System.out.println(bank.statement(id));
+                        break;
+                    }
+
+                    case "6": {
+                        System.out.println("\n===== ALL ACCOUNTS =====");
+
+                        for (Account account : bank.listAccounts()) {
+                            bank.displayAccount(account);
+                        }
+                        break;
+                    }
+
+                    case "7": {
+                        bank.generateReport();
+                        break;
+                    }
+
+                    case "8": {
+                        System.out.print("Account number: ");
+                        String id = sc.nextLine().trim();
+
+                        System.out.print("Deposit amount per transaction: ");
+                        long amount = Long.parseLong(sc.nextLine().trim());
+
+                        System.out.print("Number of deposits: ");
+                        int count = Integer.parseInt(sc.nextLine().trim());
+
+                        if (amount <= 0 || count <= 0 || count > 1000) {
+                            System.out.println(
+                                "Amount must be positive; count must be 1-1000."
+                            );
+                            break;
+                        }
+
+                        bank.findAccount(id);
+
+                        try (BatchDeposit batch =
+                                new BatchDeposit(bank, id, amount, count)) {
+                            batch.runBatch();
+                        }
+
+                        System.out.println("Batch processing completed.");
+                        break;
+                    }
+
+                    case "0": {
+                        bank.saveAccounts();
+                        System.out.println("Accounts saved. Goodbye!");
+                        running = false;
+                        break;
+                    }
+
+                    default:
+                        System.out.println("Invalid menu option.");
+                }
+
+            } catch (NumberFormatException e) {
+                System.out.println("Please enter a valid whole number.");
+            } catch (Exception e) {
+                System.out.println("Operation failed: " + e.getMessage());
             }
         }
 
-        System.out.println("\n===== MINIBANK =====");
+        sc.close();
+    }
 
-        System.out.println("Valid mobile: " + isValidMobile("9876543210"));
-        System.out.println("Invalid mobile: " + isValidMobile("12345"));
+    private static class BatchDeposit implements AutoCloseable {
+        private final BankService bank;
+        private final String accountNumber;
+        private final long amount;
+        private final int count;
 
-        Account[] accounts = {
-            new SavingsAccount("Purv Patel", 10000, 1000),
-            new CurrentAccount("Rahul Patel", 5000, 2000),
-            new FixedDepositAccount("Amit Patel", 20000)
-        };
-
-        BankService bankService = new BankService();
-
-        for (Account account : accounts) {
-            System.out.println();
-            bankService.displayAccount(account);
+        BatchDeposit(BankService bank, String accountNumber,
+                     long amount, int count) {
+            this.bank = bank;
+            this.accountNumber = accountNumber;
+            this.amount = amount;
+            this.count = count;
         }
 
-        System.out.println("\n===== WITHDRAWAL RULES =====");
+        public void runBatch() {
+            TransactionProcessor processor = new TransactionProcessor();
 
-        WithdrawRule rule1 = new WithdrawRule() {
-            @Override
-            public boolean allow(Account account, long amount) {
-                return account.canWithdraw(amount);
+            try {
+                for (int i = 0; i < count; i++) {
+                    processor.submit(() -> {
+                        try {
+                            bank.deposit(accountNumber, amount);
+                        } catch (BankException e) {
+                            System.out.println(
+                                "Batch transaction failed: " + e.getMessage()
+                            );
+                        }
+                    });
+                }
+            } finally {
+                processor.stop();
             }
-        };
-
-        WithdrawRule rule2 =
-                (account, amount) -> account.canWithdraw(amount);
-
-        System.out.println(
-            "Anonymous class: " + rule1.allow(accounts[0], 2000)
-        );
-
-        System.out.println(
-            "Lambda expression: " + rule2.allow(accounts[0], 2000)
-        );
-
-        System.out.println("\n===== EXCEPTION HANDLING =====");
-
-        Account testAccount = new SavingsAccount("Test Customer", 1000, 0);
-
-        try {
-            testAccount.withdraw(5000);
-
-        } catch (InsufficientFundsException e) {
-            System.out.println(
-                "Withdrawal failed: short by " + e.getShortfall()
-            );
-
-        } catch (InvalidAmountException e) {
-            System.out.println("Invalid withdrawal: " + e.getMessage());
-
-        } finally {
-            System.out.println("Withdrawal attempt completed.");
         }
 
-        try {
-            testAccount.deposit(-500);
-
-        } catch (InvalidAmountException e) {
-            System.out.println("Deposit failed: " + e.getMessage());
+        @Override
+        public void close() {
+            System.out.println("Batch deposit session closed.");
         }
-
-        System.out.println(
-            "Test account balance: " + testAccount.getBalance()
-        );
-
-        System.out.println("\n===== MONEY TRANSFER =====");
-
-        try {
-            accounts[0].transfer(accounts[1], 2000);
-
-        } catch (BankException e) {
-            System.out.println("Transfer failed: " + e.getMessage());
-        }
-
-        System.out.println("\n===== TRY-WITH-RESOURCES =====");
-
-        try (BankResource resource = new BankResource()) {
-            System.out.println("Processing banking operation.");
-
-        } catch (Exception e) {
-            System.out.println("Resource error: " + e.getMessage());
-        }
-
-        System.out.println("\n===== UPDATED BALANCES =====");
-
-        for (Account account : accounts) {
-            System.out.println(
-                account.getAccountNumber()
-                + " | " + account.getOwnerName()
-                + " | Balance: " + account.getBalance()
-            );
-        }
-
-        System.out.println("\n===== MINIBANK COMPLETED =====");
     }
 }
+

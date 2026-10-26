@@ -1,15 +1,22 @@
 package util;
 
 import model.Account;
+
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class AccountStore {
 
-    private final HashMap<String, Account> accounts = new HashMap<>();
-    private final ArrayList<String> transactionHistory = new ArrayList<>();
+    // Thread-safe account storage
+    private final ConcurrentHashMap<String, Account> accounts =
+            new ConcurrentHashMap<>();
+
+    // Thread-safe transaction history
+    private final CopyOnWriteArrayList<String> transactionHistory =
+            new CopyOnWriteArrayList<>();
 
     public void add(Account account) {
         if (account == null) {
@@ -17,6 +24,7 @@ public class AccountStore {
         }
 
         accounts.put(account.getAccountNumber(), account);
+
         transactionHistory.add(
             "Account added: " + account.getAccountNumber()
         );
@@ -56,3 +64,4 @@ public class AccountStore {
         return result;
     }
 }
+

@@ -6,6 +6,8 @@ import exception.InvalidAmountException;
 import model.annotation.Id;
 import model.annotation.Positive;
 
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.io.Serializable;
 import java.util.Objects;
 
@@ -26,11 +28,28 @@ public abstract class Account
 
     private static int accountCounter = 0;
 
-    private static String generateAccountNumber() {
+    // Generate a unique account number safely.
+    private static synchronized String generateAccountNumber() {
         accountCounter++;
         return String.format("AC%04d", accountCounter);
     }
 
+    // Update the counter using the number of an existing account.
+    private static synchronized void updateAccountCounter(String accountNumber) {
+        if (accountNumber != null && accountNumber.matches("AC\\d+")) {
+            try {
+                int number = Integer.parseInt(accountNumber.substring(2));
+
+                if (number > accountCounter) {
+                    accountCounter = number;
+                }
+            } catch (NumberFormatException e) {
+                // Ignore malformed account numbers.
+            }
+        }
+    }
+
+    // Constructor
     public Account(String ownerName, long openingBalance) {
         this.accountNumber = generateAccountNumber();
         this.ownerName = ownerName;
@@ -42,10 +61,19 @@ public abstract class Account
         this(ownerName, 0);
     }
 
+    // Update the counter whenever an account is deserialized.
+    private void readObject(ObjectInputStream in)
+            throws IOException, ClassNotFoundException {
+
+        in.defaultReadObject();
+        updateAccountCounter(accountNumber);
+    }
+
     public abstract double interestRate();
 
     public abstract boolean canWithdraw(long amount);
 
+    // Deposit money
     @Override
     public synchronized void deposit(long amount)
             throws InvalidAmountException {
@@ -67,6 +95,7 @@ public abstract class Account
         System.out.println("Deposited: " + amount);
     }
 
+    // Withdraw money
     @Override
     public synchronized boolean withdraw(long amount)
             throws InsufficientFundsException, InvalidAmountException {
@@ -99,6 +128,7 @@ public abstract class Account
         return true;
     }
 
+    // Transfer money between accounts
     public void transfer(Account to, long amount) throws BankException {
 
         if (to == null) {
@@ -155,22 +185,27 @@ public abstract class Account
         }
     }
 
+    // Get account number
     public String getAccountNumber() {
         return accountNumber;
     }
 
+    // Get owner name
     public String getOwnerName() {
         return ownerName;
     }
 
+    // Get balance safely
     public synchronized long getBalance() {
         return balance;
     }
 
+    // Check whether account is active
     public boolean isActive() {
         return active;
     }
 
+    // Display account details
     @Override
     public String toString() {
         return "Account{" +
@@ -181,6 +216,7 @@ public abstract class Account
                 '}';
     }
 
+    // Compare accounts using account number
     @Override
     public boolean equals(Object obj) {
 
@@ -200,11 +236,11 @@ public abstract class Account
     @Override
     public int hashCode() {
         return Objects.hash(accountNumber);
-
     }
 
     @Override
-public int compareTo(Account other) {
-    return this.accountNumber.compareTo(other.accountNumber);
+    public int compareTo(Account other) {
+        return this.accountNumber.compareTo(other.accountNumber);
+    }
 }
-}
+
