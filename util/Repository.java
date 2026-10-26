@@ -18,12 +18,18 @@ public class Repository<T> {
         try {
             Field idField = null;
 
-            for (Field field : entity.getClass().getDeclaredFields()) {
-                if (field.isAnnotationPresent(Id.class)) {
-                    idField = field;
-                    break;
-                }
-            }
+            Class<?> currentClass = entity.getClass();
+
+while (currentClass != null && idField == null) {
+    for (Field field : currentClass.getDeclaredFields()) {
+        if (field.isAnnotationPresent(Id.class)) {
+            idField = field;
+            break;
+        }
+    }
+
+    currentClass = currentClass.getSuperclass();
+}
 
             if (idField == null) {
                 throw new IllegalArgumentException(
