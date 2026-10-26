@@ -1,3 +1,10 @@
+import model.Account;
+import model.CurrentAccount;
+import model.FixedDepositAccount;
+import model.SavingsAccount;
+import model.WithdrawRule;
+import service.BankService;
+
 public class MiniBank {
 
 
@@ -8,14 +15,13 @@ public static void main(String[] args) {
         new CurrentAccount("Rahul Patel", 5000, 2000),
         new FixedDepositAccount("Amit Patel", 20000)
     };
+    BankService bankService = new BankService();
 
     System.out.println("===== MINIBANK =====");
-
-    for (Account account : accounts) {
-        System.out.println("\n" + account);
-        System.out.println("Interest Rate: " + account.interestRate() + "%");
-        System.out.println("Yearly Interest: " + account.yearlyInterest());
-    }
+for (Account account : accounts) {
+    System.out.println();
+    bankService.displayAccount(account);
+}
 
     System.out.println("\n===== WITHDRAWAL RULES =====");
 

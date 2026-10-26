@@ -1,3 +1,4 @@
+package model;
 public abstract class Account implements Transactable, InterestBearing {
 
 
