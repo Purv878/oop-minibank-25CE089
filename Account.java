@@ -1,3 +1,5 @@
+import java.util.Objects;
+
 public class Account {
 
 
@@ -40,9 +42,7 @@ public boolean withdraw(long amount) {
         return true;
     }
 
-    System.out.println(
-        "Withdrawal failed: insufficient balance or invalid amount."
-    );
+    System.out.println("Withdrawal failed: insufficient balance or invalid amount.");
     return false;
 }
 
@@ -60,6 +60,36 @@ public long getBalance() {
 
 public boolean isActive() {
     return active;
+}
+
+@Override
+public String toString() {
+    return "Account{"
+            + "accountNumber='" + accountNumber + '\''
+            + ", ownerName='" + ownerName + '\''
+            + ", balance=" + balance
+            + ", active=" + active
+            + '}';
+}
+
+@Override
+public boolean equals(Object obj) {
+    if (this == obj) {
+        return true;
+    }
+
+    if (!(obj instanceof Account)) {
+        return false;
+    }
+
+    Account other = (Account) obj;
+
+    return accountNumber.equals(other.accountNumber);
+}
+
+@Override
+public int hashCode() {
+    return Objects.hash(accountNumber);
 }
 
 

@@ -1,60 +1,44 @@
-record BankInfo(String name, String branch) {}
-
 public class MiniBank {
 
 
 public static void main(String[] args) {
 
-    BankInfo bank = new BankInfo("MiniBank", "CHARUSAT Branch");
+    System.out.println("===== MINIBANK =====");
 
-    System.out.println("================================");
-    System.out.println("          " + bank.name());
-    System.out.println("          " + bank.branch());
-    System.out.println("================================");
-
-    // Create three customers
     Customer c1 = new Customer(
         "Purv Patel", "purv@example.com", "9876543210"
     );
 
-    Customer c2 = new Customer(
-        "Rahul Patel", "rahul@example.com", "9876543211"
+    c1.setAddress(
+        new Customer.Address("Main Road", "Bayad", "383325")
     );
 
-    Customer c3 = new Customer(
-        "Amit Patel", "amit@example.com", "9876543212"
-    );
+    System.out.println("\n===== CUSTOMER =====");
+    System.out.println("Customer ID: " + c1.getCustomerId());
+    System.out.println("Name: " + c1.getName());
+    System.out.println("Address: " + c1.getAddress());
 
-    // Display customer details
-    System.out.println("\n===== CUSTOMERS =====");
+    Customer c2 = c1.clone();
 
-    System.out.println(c1.getCustomerId() + " - " + c1.getName());
-    System.out.println(c2.getCustomerId() + " - " + c2.getName());
-    System.out.println(c3.getCustomerId() + " - " + c3.getName());
+    System.out.println("\n===== CLONED CUSTOMER =====");
+    System.out.println("Customer ID: " + c2.getCustomerId());
+    System.out.println("Name: " + c2.getName());
+    System.out.println("Address: " + c2.getAddress());
 
-    // Create three accounts
-    Account[] accounts = {
-        new Account(c1.getName(), 1000),
-        new Account(c2.getName(), 2000),
-        new Account(c3.getName())
-    };
+    Account a1 = new Account("Purv Patel", 1500);
+    Account a2 = new Account("Rahul Patel", 2000);
 
-    // Perform transactions
-    accounts[0].deposit(500);
-    accounts[1].withdraw(300);
-    accounts[2].deposit(1000);
-
-    // Display account details
     System.out.println("\n===== ACCOUNT DETAILS =====");
+    System.out.println(a1);
+    System.out.println(a2);
 
-    for (Account account : accounts) {
-        System.out.println(
-            account.getAccountNumber()
-            + " | Owner: " + account.getOwnerName()
-            + " | Balance: " + account.getBalance()
-            + " | Active: " + account.isActive()
-        );
-    }
+    System.out.println("\n===== EQUALITY TEST =====");
+    System.out.println("a1 equals a1: " + a1.equals(a1));
+    System.out.println("a1 equals a2: " + a1.equals(a2));
+
+    System.out.println("\n===== INSTANCEOF TEST =====");
+    Object obj = a1;
+    System.out.println("Is obj an Account? " + (obj instanceof Account));
 }
 
 
