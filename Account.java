@@ -1,11 +1,9 @@
-import java.util.Objects;
-
-public class Account {
+public abstract class Account {
 
 
 private final String accountNumber;
 private String ownerName;
-private long balance;
+protected long balance;
 private boolean active;
 
 private static int accountCounter = 0;
@@ -26,6 +24,10 @@ public Account(String ownerName) {
     this(ownerName, 0);
 }
 
+public abstract double interestRate();
+
+public abstract boolean canWithdraw(long amount);
+
 public void deposit(long amount) {
     if (amount > 0) {
         balance += amount;
@@ -36,13 +38,13 @@ public void deposit(long amount) {
 }
 
 public boolean withdraw(long amount) {
-    if (amount > 0 && balance >= amount) {
+    if (canWithdraw(amount)) {
         balance -= amount;
         System.out.println("Withdrawn: " + amount);
         return true;
     }
 
-    System.out.println("Withdrawal failed: insufficient balance or invalid amount.");
+    System.out.println("Withdrawal failed.");
     return false;
 }
 
@@ -64,12 +66,12 @@ public boolean isActive() {
 
 @Override
 public String toString() {
-    return "Account{"
-            + "accountNumber='" + accountNumber + '\''
-            + ", ownerName='" + ownerName + '\''
-            + ", balance=" + balance
-            + ", active=" + active
-            + '}';
+    return "Account{" +
+            "accountNumber='" + accountNumber + '\'' +
+            ", ownerName='" + ownerName + '\'' +
+            ", balance=" + balance +
+            ", active=" + active +
+            '}';
 }
 
 @Override
@@ -83,13 +85,12 @@ public boolean equals(Object obj) {
     }
 
     Account other = (Account) obj;
-
     return accountNumber.equals(other.accountNumber);
 }
 
 @Override
 public int hashCode() {
-    return Objects.hash(accountNumber);
+    return java.util.Objects.hash(accountNumber);
 }
 
 

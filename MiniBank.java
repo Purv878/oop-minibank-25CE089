@@ -3,39 +3,36 @@ public class MiniBank {
 
 public static void main(String[] args) {
 
-    System.out.println("===== MINIBANK PRACTICAL 4 =====");
+    Account[] accounts = {
+        new SavingsAccount("Purv Patel", 10000, 1000),
+        new CurrentAccount("Rahul Patel", 5000, 2000),
+        new FixedDepositAccount("Amit Patel", 20000)
+    };
 
-    // Test validation
-    System.out.println("\n===== VALIDATION =====");
-    System.out.println(
-            "Mobile valid: "
-                    + Validator.isValidMobile("9876543210"));
-    System.out.println(
-            "Email valid: "
-                    + Validator.isValidEmail("purv@example.com"));
-    System.out.println(
-            "PAN valid: "
-                    + Validator.isValidPan("ABCDE1234F"));
-    System.out.println(
-            "IFSC valid: "
-                    + Validator.isValidIfsc("SBIN0001234"));
+    System.out.println("===== MINIBANK =====");
 
-    // Create an account
-    Account account = new Account("Purv Patel", 1500);
+    for (Account account : accounts) {
+        System.out.println("\n" + account);
+        System.out.println(
+                "Interest Rate: " + account.interestRate() + "%"
+        );
+    }
 
-    // Parse a transaction command
-    System.out.println("\n===== COMMAND PARSER =====");
+    System.out.println("\n===== TRANSACTIONS =====");
 
-    Command command = CommandParser.parse("DEPOSIT AC0001 500");
+    accounts[0].withdraw(2000);
+    accounts[1].withdraw(6000);
+    accounts[2].withdraw(1000);
 
-    System.out.println("Type: " + command.type());
-    System.out.println("Account: " + command.accountNumber());
-    System.out.println("Amount: " + command.amount());
+    System.out.println("\n===== UPDATED BALANCES =====");
 
-    // Format account statement
-    System.out.println("\n===== STATEMENT =====");
-    System.out.println(
-            StatementFormatter.buildStatement(account));
+    for (Account account : accounts) {
+        System.out.println(
+                account.getAccountNumber()
+                + " | " + account.getOwnerName()
+                + " | Balance: " + account.getBalance()
+        );
+    }
 }
 
 
