@@ -5,6 +5,8 @@ import model.SavingsAccount;
 import model.WithdrawRule;
 import service.BankService;
 
+import static util.Validator.*;
+
 public class MiniBank {
 
 
@@ -18,6 +20,10 @@ public static void main(String[] args) {
     BankService bankService = new BankService();
 
     System.out.println("===== MINIBANK =====");
+
+    System.out.println("Valid mobile: " + isValidMobile("9876543210"));
+System.out.println("Invalid mobile: " + isValidMobile("12345"));
+
 for (Account account : accounts) {
     System.out.println();
     bankService.displayAccount(account);
