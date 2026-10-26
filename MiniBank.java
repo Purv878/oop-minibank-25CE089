@@ -3,42 +3,39 @@ public class MiniBank {
 
 public static void main(String[] args) {
 
-    System.out.println("===== MINIBANK =====");
+    System.out.println("===== MINIBANK PRACTICAL 4 =====");
 
-    Customer c1 = new Customer(
-        "Purv Patel", "purv@example.com", "9876543210"
-    );
+    // Test validation
+    System.out.println("\n===== VALIDATION =====");
+    System.out.println(
+            "Mobile valid: "
+                    + Validator.isValidMobile("9876543210"));
+    System.out.println(
+            "Email valid: "
+                    + Validator.isValidEmail("purv@example.com"));
+    System.out.println(
+            "PAN valid: "
+                    + Validator.isValidPan("ABCDE1234F"));
+    System.out.println(
+            "IFSC valid: "
+                    + Validator.isValidIfsc("SBIN0001234"));
 
-    c1.setAddress(
-        new Customer.Address("Main Road", "Bayad", "383325")
-    );
+    // Create an account
+    Account account = new Account("Purv Patel", 1500);
 
-    System.out.println("\n===== CUSTOMER =====");
-    System.out.println("Customer ID: " + c1.getCustomerId());
-    System.out.println("Name: " + c1.getName());
-    System.out.println("Address: " + c1.getAddress());
+    // Parse a transaction command
+    System.out.println("\n===== COMMAND PARSER =====");
 
-    Customer c2 = c1.clone();
+    Command command = CommandParser.parse("DEPOSIT AC0001 500");
 
-    System.out.println("\n===== CLONED CUSTOMER =====");
-    System.out.println("Customer ID: " + c2.getCustomerId());
-    System.out.println("Name: " + c2.getName());
-    System.out.println("Address: " + c2.getAddress());
+    System.out.println("Type: " + command.type());
+    System.out.println("Account: " + command.accountNumber());
+    System.out.println("Amount: " + command.amount());
 
-    Account a1 = new Account("Purv Patel", 1500);
-    Account a2 = new Account("Rahul Patel", 2000);
-
-    System.out.println("\n===== ACCOUNT DETAILS =====");
-    System.out.println(a1);
-    System.out.println(a2);
-
-    System.out.println("\n===== EQUALITY TEST =====");
-    System.out.println("a1 equals a1: " + a1.equals(a1));
-    System.out.println("a1 equals a2: " + a1.equals(a2));
-
-    System.out.println("\n===== INSTANCEOF TEST =====");
-    Object obj = a1;
-    System.out.println("Is obj an Account? " + (obj instanceof Account));
+    // Format account statement
+    System.out.println("\n===== STATEMENT =====");
+    System.out.println(
+            StatementFormatter.buildStatement(account));
 }
 
 
