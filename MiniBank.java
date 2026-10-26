@@ -1,21 +1,9 @@
-import java.util.Scanner;
-
 record BankInfo(String name, String branch) {}
-
-enum MenuOption {
-OPEN_ACCOUNT,
-DEPOSIT,
-WITHDRAW,
-TRANSFER,
-EXIT
-}
 
 public class MiniBank {
 
 
 public static void main(String[] args) {
-
-    Scanner sc = new Scanner(System.in);
 
     BankInfo bank = new BankInfo("MiniBank", "CHARUSAT Branch");
 
@@ -24,49 +12,49 @@ public static void main(String[] args) {
     System.out.println("          " + bank.branch());
     System.out.println("================================");
 
-    MenuOption option;
+    // Create three customers
+    Customer c1 = new Customer(
+        "Purv Patel", "purv@example.com", "9876543210"
+    );
 
-    do {
-        System.out.println("\n===== MINI BANK MENU =====");
-        System.out.println("1. Open Account");
-        System.out.println("2. Deposit");
-        System.out.println("3. Withdraw");
-        System.out.println("4. Transfer");
-        System.out.println("5. Exit");
-        System.out.print("Enter your choice: ");
+    Customer c2 = new Customer(
+        "Rahul Patel", "rahul@example.com", "9876543211"
+    );
 
-        int choice = sc.nextInt();
+    Customer c3 = new Customer(
+        "Amit Patel", "amit@example.com", "9876543212"
+    );
 
-        option = switch (choice) {
-            case 1 -> MenuOption.OPEN_ACCOUNT;
-            case 2 -> MenuOption.DEPOSIT;
-            case 3 -> MenuOption.WITHDRAW;
-            case 4 -> MenuOption.TRANSFER;
-            case 5 -> MenuOption.EXIT;
-            default -> null;
-        };
+    // Display customer details
+    System.out.println("\n===== CUSTOMERS =====");
 
-        if (option == null) {
-            System.out.println("Invalid choice! Please try again.");
-            continue;
-        }
+    System.out.println(c1.getCustomerId() + " - " + c1.getName());
+    System.out.println(c2.getCustomerId() + " - " + c2.getName());
+    System.out.println(c3.getCustomerId() + " - " + c3.getName());
 
-        switch (option) {
-            case OPEN_ACCOUNT ->
-                System.out.println("Open Account feature will be added soon.");
-            case DEPOSIT ->
-                System.out.println("Deposit feature will be added soon.");
-            case WITHDRAW ->
-                System.out.println("Withdraw feature will be added soon.");
-            case TRANSFER ->
-                System.out.println("Transfer feature will be added soon.");
-            case EXIT ->
-                System.out.println("Thank you for using MiniBank!");
-        }
+    // Create three accounts
+    Account[] accounts = {
+        new Account(c1.getName(), 1000),
+        new Account(c2.getName(), 2000),
+        new Account(c3.getName())
+    };
 
-    } while (option != MenuOption.EXIT);
+    // Perform transactions
+    accounts[0].deposit(500);
+    accounts[1].withdraw(300);
+    accounts[2].deposit(1000);
 
-    sc.close();
+    // Display account details
+    System.out.println("\n===== ACCOUNT DETAILS =====");
+
+    for (Account account : accounts) {
+        System.out.println(
+            account.getAccountNumber()
+            + " | Owner: " + account.getOwnerName()
+            + " | Balance: " + account.getBalance()
+            + " | Active: " + account.isActive()
+        );
+    }
 }
 
 
