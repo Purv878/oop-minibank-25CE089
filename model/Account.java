@@ -1,109 +1,196 @@
 package model;
 
-import model.annotation.Positive;
-
-
-import model.annotation.Id;
-
+import exception.BankException;
+import exception.InsufficientFundsException;
+import exception.InvalidAmountException;
 import model.annotation.Id;
 import model.annotation.Positive;
+
 public abstract class Account implements Transactable, InterestBearing {
 
-@Id
-private final String accountNumber;
-private String ownerName;
-@Positive
-protected long balance;
-private boolean active;
+    @Id
+    private final String accountNumber;
 
-private static int accountCounter = 0;
+    private String ownerName;
 
-private static String generateAccountNumber() {
-    accountCounter++;
-    return String.format("AC%04d", accountCounter);
-}
+    @Positive
+    protected long balance;
 
-public Account(String ownerName, long openingBalance) {
-    this.accountNumber = generateAccountNumber();
-    this.ownerName = ownerName;
-    this.balance = openingBalance;
-    this.active = true;
-}
+    private boolean active;
 
-public Account(String ownerName) {
-    this(ownerName, 0);
-}
+    private static int accountCounter = 0;
 
-public abstract double interestRate();
+    private static String generateAccountNumber() {
+        accountCounter++;
+        return String.format("AC%04d", accountCounter);
+    }
 
-public abstract boolean canWithdraw(long amount);
+    public Account(String ownerName, long openingBalance) {
+        this.accountNumber = generateAccountNumber();
+        this.ownerName = ownerName;
+        this.balance = openingBalance;
+        this.active = true;
+    }
 
-@Override
-public void deposit(long amount) {
-    if (amount > 0) {
+    public Account(String ownerName) {
+        this(ownerName, 0);
+    }
+
+    public abstract double interestRate();
+
+    public abstract boolean canWithdraw(long amount);
+
+    @Override
+    public void deposit(long amount) throws InvalidAmountException {
+
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                "Deposit amount must be greater than zero."
+            );
+        }
+
+        if (balance > Long.MAX_VALUE - amount) {
+            throw new InvalidAmountException(
+                "Deposit amount exceeds the maximum allowed balance."
+            );
+        }
+
         balance += amount;
+
         System.out.println("Deposited: " + amount);
-    } else {
-        System.out.println("Deposit amount must be positive.");
     }
-}
 
-@Override
-public boolean withdraw(long amount) {
-    if (canWithdraw(amount)) {
+    @Override
+    public boolean withdraw(long amount)
+            throws InsufficientFundsException, InvalidAmountException {
+
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                "Withdrawal amount must be greater than zero."
+            );
+        }
+
+        if (!canWithdraw(amount)) {
+            long shortfall;
+
+            if (balance < 0) {
+                shortfall = amount > Long.MAX_VALUE + balance
+                        ? Long.MAX_VALUE
+                        : amount - balance;
+            } else {
+                shortfall = amount - balance;
+            }
+
+            throw new InsufficientFundsException(
+                "Insufficient funds for withdrawal.",
+                shortfall
+            );
+        }
+
         balance -= amount;
+
         System.out.println("Withdrawn: " + amount);
+
         return true;
     }
 
-    System.out.println("Withdrawal failed.");
-    return false;
-}
+    public void transfer(Account to, long amount) throws BankException {
 
-public String getAccountNumber() {
-    return accountNumber;
-}
+        if (to == null) {
+            throw new BankException(
+                "Destination account cannot be null."
+            );
+        }
 
-public String getOwnerName() {
-    return ownerName;
-}
+        if (to == this) {
+            throw new BankException(
+                "Cannot transfer money to the same account."
+            );
+        }
 
-public long getBalance() {
-    return balance;
-}
+        if (amount <= 0) {
+            throw new InvalidAmountException(
+                "Transfer amount must be greater than zero."
+            );
+        }
 
-public boolean isActive() {
-    return active;
-}
+        // Check the recipient balance before withdrawing.
+        if (to.balance > Long.MAX_VALUE - amount) {
+            throw new InvalidAmountException(
+                "Transfer would exceed the recipient's maximum balance."
+            );
+        }
 
-@Override
-public String toString() {
-    return "Account{" +
-            "accountNumber='" + accountNumber + '\'' +
-            ", ownerName='" + ownerName + '\'' +
-            ", balance=" + balance +
-            ", active=" + active +
-            '}';
-}
+        boolean withdrawn = false;
 
-@Override
-public boolean equals(Object obj) {
-    if (this == obj) {
-        return true;
+        try {
+            withdraw(amount);
+            withdrawn = true;
+
+            to.deposit(amount);
+
+            System.out.println(
+                "Transfer successful: " + amount
+            );
+
+        } catch (BankException e) {
+
+            // Restore the sender if the recipient deposit fails.
+            if (withdrawn) {
+                balance += amount;
+            }
+
+            throw e;
+
+        } finally {
+            System.out.println("Transfer attempt finished.");
+        }
     }
 
-    if (!(obj instanceof Account)) {
-        return false;
+    public String getAccountNumber() {
+        return accountNumber;
     }
 
-    Account other = (Account) obj;
-    return accountNumber.equals(other.accountNumber);
-}
+    public String getOwnerName() {
+        return ownerName;
+    }
 
-@Override
-public int hashCode() {
-    return java.util.Objects.hash(accountNumber);
-}
+    public long getBalance() {
+        return balance;
+    }
 
+    public boolean isActive() {
+        return active;
+    }
 
+    @Override
+    public String toString() {
+        return "Account{" +
+                "accountNumber='" + accountNumber + '\'' +
+                ", ownerName='" + ownerName + '\'' +
+                ", balance=" + balance +
+                ", active=" + active +
+                '}';
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+
+        if (this == obj) {
+            return true;
+        }
+
+        if (!(obj instanceof Account)) {
+            return false;
+        }
+
+        Account other = (Account) obj;
+
+        return accountNumber.equals(other.accountNumber);
+    }
+
+    @Override
+    public int hashCode() {
+        return java.util.Objects.hash(accountNumber);
+    }
 }
