@@ -6,7 +6,13 @@ import exception.InvalidAmountException;
 import model.annotation.Id;
 import model.annotation.Positive;
 
-public abstract class Account implements Transactable, InterestBearing {
+import java.io.Serializable;
+import java.util.Objects;
+
+public abstract class Account
+        implements Transactable, InterestBearing, Serializable {
+
+    private static final long serialVersionUID = 1L;
 
     @Id
     private final String accountNumber;
@@ -193,6 +199,6 @@ public abstract class Account implements Transactable, InterestBearing {
 
     @Override
     public int hashCode() {
-        return java.util.Objects.hash(accountNumber);
+        return Objects.hash(accountNumber);
     }
 }
