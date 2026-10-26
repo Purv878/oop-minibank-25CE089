@@ -41,7 +41,8 @@ public abstract class Account implements Transactable, InterestBearing {
     public abstract boolean canWithdraw(long amount);
 
     @Override
-    public void deposit(long amount) throws InvalidAmountException {
+    public synchronized void deposit(long amount)
+            throws InvalidAmountException {
 
         if (amount <= 0) {
             throw new InvalidAmountException(
@@ -51,7 +52,7 @@ public abstract class Account implements Transactable, InterestBearing {
 
         if (balance > Long.MAX_VALUE - amount) {
             throw new InvalidAmountException(
-                "Deposit amount exceeds the maximum allowed balance."
+                "Deposit exceeds the maximum allowed balance."
             );
         }
 
@@ -61,7 +62,7 @@ public abstract class Account implements Transactable, InterestBearing {
     }
 
     @Override
-    public boolean withdraw(long amount)
+    public synchronized boolean withdraw(long amount)
             throws InsufficientFundsException, InvalidAmountException {
 
         if (amount <= 0) {
@@ -73,12 +74,10 @@ public abstract class Account implements Transactable, InterestBearing {
         if (!canWithdraw(amount)) {
             long shortfall;
 
-            if (balance < 0) {
-                shortfall = amount > Long.MAX_VALUE + balance
-                        ? Long.MAX_VALUE
-                        : amount - balance;
+            if (balance < 0 && amount > Long.MAX_VALUE + balance) {
+                shortfall = Long.MAX_VALUE;
             } else {
-                shortfall = amount - balance;
+                shortfall = Math.max(amount - balance, 0);
             }
 
             throw new InsufficientFundsException(
@@ -114,36 +113,39 @@ public abstract class Account implements Transactable, InterestBearing {
             );
         }
 
-        // Check the recipient balance before withdrawing.
-        if (to.balance > Long.MAX_VALUE - amount) {
-            throw new InvalidAmountException(
-                "Transfer would exceed the recipient's maximum balance."
-            );
-        }
+        synchronized (this) {
+            synchronized (to) {
 
-        boolean withdrawn = false;
+                if (to.balance > Long.MAX_VALUE - amount) {
+                    throw new InvalidAmountException(
+                        "Transfer exceeds the recipient's maximum balance."
+                    );
+                }
 
-        try {
-            withdraw(amount);
-            withdrawn = true;
+                boolean withdrawn = false;
 
-            to.deposit(amount);
+                try {
+                    withdraw(amount);
+                    withdrawn = true;
 
-            System.out.println(
-                "Transfer successful: " + amount
-            );
+                    to.deposit(amount);
 
-        } catch (BankException e) {
+                    System.out.println(
+                        "Transfer successful: " + amount
+                    );
 
-            // Restore the sender if the recipient deposit fails.
-            if (withdrawn) {
-                balance += amount;
+                } catch (BankException e) {
+
+                    if (withdrawn) {
+                        balance += amount;
+                    }
+
+                    throw e;
+
+                } finally {
+                    System.out.println("Transfer attempt finished.");
+                }
             }
-
-            throw e;
-
-        } finally {
-            System.out.println("Transfer attempt finished.");
         }
     }
 
@@ -155,7 +157,7 @@ public abstract class Account implements Transactable, InterestBearing {
         return ownerName;
     }
 
-    public long getBalance() {
+    public synchronized long getBalance() {
         return balance;
     }
 
