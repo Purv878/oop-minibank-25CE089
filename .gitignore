@@ -1,4 +1,5 @@
 *.class
-students.dat
 accounts.dat
+students.dat
 end-of-day-report.txt
+test-classes/

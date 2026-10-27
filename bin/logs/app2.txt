@@ -1,0 +1,4 @@
+Server started
+ERROR: Invalid request
+Application stopped
+ERROR: Timeout occurred
